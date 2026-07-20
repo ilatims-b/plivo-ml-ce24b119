@@ -48,8 +48,8 @@ def main():
         except Exception as e:
             print(f"Warning reading run_history.json: {e}")
 
-    # 2. Load from any .pt checkpoint files in the current directory
-    pt_files = sorted(glob.glob("ckpt*.pt") + glob.glob("*.pt"))
+    # 2. Load from any .pt checkpoint files in root or checkpoints/ folder
+    pt_files = sorted(glob.glob("ckpt*.pt") + glob.glob("*.pt") + glob.glob("checkpoints/ckpt*.pt") + glob.glob("checkpoints/*.pt"))
     for pt in pt_files:
         try:
             ckpt = torch.load(pt, map_location="cpu", weights_only=True)
@@ -388,12 +388,14 @@ def main():
 </body>
 </html>"""
 
-    with open(args.html, "w") as f:
+    out_path = f"dashboards/{args.html}" if os.path.exists("dashboards") and not args.html.startswith("dashboards/") else args.html
+    with open(out_path, "w") as f:
         f.write(html_content)
     if args.html == "ngram_phases.html":
-        with open("ngram_regimes.html", "w") as f:
+        reg_path = "dashboards/ngram_regimes.html" if os.path.exists("dashboards") else "ngram_regimes.html"
+        with open(reg_path, "w") as f:
             f.write(html_content)
-    print(f"Saved dedicated individual plots for {len(unique_runs)} runs to {args.html} and ngram_regimes.html")
+    print(f"Saved dedicated individual plots for {len(unique_runs)} runs to {out_path}")
 
 
 if __name__ == "__main__":

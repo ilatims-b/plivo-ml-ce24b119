@@ -23,9 +23,9 @@ class RMSNorm(nn.Module):
 class Config:
     vocab_size = 256      # byte-level tokenizer default
     block_size = 256
-    n_layer = 4
+    n_layer = 6
     n_head = 4
-    n_embd = 160
+    n_embd = 136
     dropout = 0.0
     tie_weights = False   # untied input and output token embeddings
     num_loops = 1         # standard unrolled transformer (Run 5 best config)
@@ -91,8 +91,9 @@ class GPT(nn.Module):
         B, T = idx.shape
         pos = torch.arange(T, device=idx.device)
         x = self.drop(self.tok_emb(idx) + self.pos_emb(pos)[None, :, :])
-        for blk in self.blocks:
-            x = blk(x)
+        for loop in range(getattr(self.cfg, "num_loops", 1)):
+            for blk in self.blocks:
+                x = blk(x)
         logits = self.head(self.ln_f(x))
         loss = None
         if targets is not None:

@@ -54,10 +54,48 @@ def generate_multi_html(history_dict, out_path="loss_curve.html", window=20):
         "#7ee787", "#ff7b72", "#a5d6ff", "#ffd97d", "#e3b341"
     ]
 
+    def normalize_label(label_str):
+        s = label_str.lower()
+        if "run 10" in s or "accum3" in s or "accum 3x" in s:
+            return "Run 10 CHAMPION (6L/136D, 3x Accum, Untied)"
+        elif "run 7" in s or "tied" in s or "tie" in s:
+            return "Run 7 (5L/128D Tied Weights)"
+        elif "run 9" in s or "6l136d" in s or "6-layer" in s:
+            return "Run 9 (6L/136D Unlooped Untied)"
+        elif "run 8" in s or "looped" in s or "loop" in s:
+            return "Run 8 (4L/160D Looped 2x)"
+        elif "run 6" in s:
+            return "Run 6 (5L/128D Untied Baseline)"
+        elif "run 5" in s or "champion" in s or "best config" in s:
+            return "Run 5 (4L/160D Untied Baseline)"
+        return label_str
+
+    unique_history = {}
+    for label, data in history_dict.items():
+        if label == "Latest Checkpoint":
+            continue
+        clean = normalize_label(label)
+        unique_history[clean] = data
+
     datasets = []
     all_steps = []
 
-    for idx, (label, data) in enumerate(history_dict.items()):
+    # Sort so Run 10 CHAMPION is first
+    def sort_key(item):
+        label, _ = item
+        if "CHAMPION" in label:
+            return (0, label)
+        elif "Run 5" in label:
+            return (1, label)
+        elif "Run 7" in label:
+            return (2, label)
+        elif "Run 9" in label:
+            return (3, label)
+        return (4, label)
+
+    sorted_history = dict(sorted(unique_history.items(), key=sort_key))
+
+    for idx, (label, data) in enumerate(sorted_history.items()):
         losses = data.get("losses", [])
         if not losses:
             continue
@@ -74,7 +112,7 @@ def generate_multi_html(history_dict, out_path="loss_curve.html", window=20):
             "label": f"{label} (MA-{window})",
             "data": [round(l, 4) for l in smoothed[::2]],
             "borderColor": color,
-            "borderWidth": 2,
+            "borderWidth": 2.5 if "CHAMPION" in label else 1.8,
             "pointRadius": 0,
             "tension": 0.2
         })
@@ -119,8 +157,12 @@ def generate_multi_html(history_dict, out_path="loss_curve.html", window=20):
 </head>
 <body>
     <div class="container">
-        <h1>Historical Training Loss Curves Comparison</h1>
+        <h1>Historical Training & Validation Loss Curves Comparison</h1>
         <p>Click items in the legend below to show/hide specific training runs.</p>
+        <div style="background: #161b22; border: 1px solid #30363d; border-left: 4px solid #ffa657; border-radius: 8px; padding: 14px 18px; margin-bottom: 24px; font-size: 13.5px; line-height: 1.5; color: #c9d1d9;">
+            <strong style="color: #ffa657;">Note on Validation vs. Training Curve Granularity:</strong><br>
+            Validation loss curves appear as straight/sparse lines connecting checkpoint evaluation intervals (<span style="color: #f0f6fc;">or evaluated at phase endpoints</span>), whereas smoothed training loss tracks real-time convergence continuously across all <span style="color: #f0f6fc;">2,000 steps</span>.
+        </div>
         <div style="position: relative; height: 500px; width: 100%;">
             <canvas id="lossChart"></canvas>
         </div>

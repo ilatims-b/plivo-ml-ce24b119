@@ -1,0 +1,10 @@
+# Notes on Champion Configuration (`bpb = 2.0320`)
+
+1. Our best performing configuration achieves a validation score of `2.0320` bits per byte (`bpb`) using a 4-layer, 160-dimension Transformer (`1,932,320` total parameters), strictly conforming to the 2,000,000 parameter cap and 2,000 optimizer step limit.
+2. The primary breakthrough (`-0.1898` bpb vs baseline) comes from replacing the raw UTF-8 byte tokenizer (`vocab_size = 256`) with a custom Byte-Pair Encoding (`vocab_size = 2048`) trained directly on `train_corpus.txt`.
+3. Because our training and evaluation data contains extensive bilingual English and Hindi text where Devanagari characters require three UTF-8 bytes each, subword merging compresses multi-byte sequences by `~2.51x`, allowing each token to capture high-level semantic units.
+4. Expanding the context window (`block_size`) from 128 to 256 tokens further leveraged this compression, doubling the effective receptive field to `~640 bytes` of continuous historical context for just `20,480` positional embedding parameters.
+5. In the core architecture, replacing `LayerNorm` with `RMSNorm` eliminated redundant mean-centering and bias terms, increasing computational throughput and training convergence.
+6. Untying input token embeddings and output linear classification weights (`tie_weights = False`) proved critical when scaling to `vocab_size = 2048`, providing `-0.0475` bpb improvement over tied weights by decoupling semantic representation from vocabulary prediction.
+7. Optimization stability was dramatically enhanced by replacing constant Adam with AdamW (`lr = 1e-3`, `weight_decay = 0.1`, `betas = (0.9, 0.95)`), 100 steps of linear warmup, cosine learning rate decay down to `1e-4`, and gradient clipping at `max_norm = 1.0`.
+8. Additional structural experiments—including deeper narrower networks (`5L/128D` at `2.0334` bpb) and recurrent weight-shared looped blocks (`num_loops = 2` at `2.1071` bpb)—demonstrated that unrolled independent layers maximizing dimension width up to our parameter ceiling yield optimal feature expressivity.

@@ -1,3 +1,19 @@
+# Starter
+
+Your loop:
+  python train.py --data ../data/train_corpus.txt --steps 2000 --out ckpt.pt
+  python evaluate.py --checkpoint ckpt.pt --text_file ../data/dev_eval.txt
+
+Baseline run ~1.5–3 min on a laptop CPU. Log every run in RUNLOG.md.
+Everything in train.py and model.py is changeable; the caps and the
+evaluate.py interface are not.
+
+Before time is up, your submission folder needs: ckpt.pt, your code,
+RUNLOG.md, NOTES.md, and SUMMARY.html (see the assignment brief,
+"Deliverables" section).
+
+---
+
 # Champion Model & Optimization Approach
 
 ### Best Model Metrics (`Run 10 Champion`)
@@ -18,4 +34,15 @@
    - **Final Convergence ($< H_3 = 1.98\text{ bpt}$)**: Operates firmly in the **higher-order ($>3$-gram) compositional regime**, building deep multi-token representations beyond pairwise or 3-subword lookup tables.
 
 ### N-Gram Phase Trajectory (`Training & Validation vs. Statistical Bounds`)
-![Champion N-Gram Phase Trajectory](champion_ngram_regime.png)
+![Champion N-Gram Phase Trajectory](dashboards/champion_ngram_regime.png)
+
+---
+
+### Interactive HTML Dashboards & Documentation Links
+All interactive multi-run comparison charts, evaluation reports, and technical notes are fully documented and accessible at the following paths:
+
+- **[Executive Summary (`SUMMARY.html`)](SUMMARY.html)**: Comprehensive overview of empirical findings, N-gram phase diagnostics, literature survey, and architectural variations (`Deliverable #3`).
+- **[N-Gram Phase & Regime Dashboard (`dashboards/ngram_phases.html`)](dashboards/ngram_phases.html)**: Interactive Chart.js dashboard plotting each model's overall training and validation cross-entropy against true statistical Unigram ($H_1$), Bigram ($H_2$), and Trigram ($H_3$) baselines (`mirrored at dashboards/ngram_regimes.html`).
+- **[Training Loss Curves Comparison (`dashboards/loss_curve.html`)](dashboards/loss_curve.html)**: Interactive multi-run Chart.js visualization comparing smoothed MA-20 training trajectories across all historical variations.
+- **[Experimental Run Log (`RUNLOG.md`)](RUNLOG.md)**: Exhaustive chronological documentation of all 10 experimental runs with hypotheses, parameter counts, step times, and empirical deductions (`Deliverable #1`).
+- **[Technical Research Notes (`NOTES.md`)](NOTES.md)**: Technical verification of KL divergences, weight tying mechanics, and optimization stability (`Deliverable #2`).
